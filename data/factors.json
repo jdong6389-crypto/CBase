@@ -1,0 +1,81 @@
+[
+  {
+    "id": "F001", "type": "energy", "name": "柴油燃烧（CO₂）", "value": 3.10, "unit": "kgCO₂e/kg fuel",
+    "source": "IPCC", "version": "v1.0", "year": "2022",
+    "spatial_scope": "全国平均",
+    "spatial_note": "如燃料品质或排放控制水平差异较大，结果可能存在偏差。",
+    "boundary_note": "仅包括柴油燃烧阶段的温室气体排放；不包括上游开采、炼制及运输；不包括设备制造与维护。",
+    "application_examples": ["公路工程中重型车辆运输作业","土石方工程中挖掘机、装载机等工程机械作业","水运工程中部分柴油动力设备运行"],
+    "caution_examples": ["小型低功率设备或非道路机械（工况差异大）","以电力或天然气为主要动力的设备场景","对燃料品质（硫含量、热值）敏感的精细核算"],
+    "usage_notes": "本因子为平均排放水平，未区分不同发动机技术或运行工况（负载、怠速、维护状态等）。"
+  },
+  {
+    "id": "F002", "type": "energy", "name": "电力（华北电网）", "value": 0.570, "unit": "kgCO₂e/kWh",
+    "source": "生态环境部", "version": "v1.0", "year": "2023",
+    "spatial_scope": "区域平均（华北电网）",
+    "spatial_note": "跨电网/跨省使用时需注意电力结构差异。",
+    "boundary_note": "电力生产环节排放因子（按电网区域平均口径）；不包含用电设备制造、线路建设等。",
+    "application_examples": ["施工现场用电（搅拌、泵送、加工设备）","运维阶段用电（照明、泵站、监控等）"],
+    "caution_examples": ["项目实际用电来自自备电厂或绿电协议（口径不一致）","需要企业级/项目级电力因子精细核算的情景"],
+    "usage_notes": "建议在报告中明确电网口径与年份；若项目存在绿电或自发自用，应在模型中单独处理。"
+  },
+  {
+    "id": "F003", "type": "material", "name": "普通硅酸盐水泥（P.O 42.5）", "value": 0.82, "unit": "kgCO₂e/kg",
+    "source": "CLCD", "version": "v1.0", "year": "2022",
+    "spatial_scope": "全国平均", "spatial_note": "",
+    "boundary_note": "生产阶段排放因子（cradle-to-gate 的简化表达）；不包含运输、施工拌合与养护阶段排放。",
+    "application_examples": ["混凝土拌合用胶凝材料（道路/桥梁/水工结构）","预制构件生产所用水泥"],
+    "caution_examples": ["特殊水泥品种（低热、硫铝酸盐等）","高比例掺合料或特种配比（需与具体产品因子匹配）"],
+    "usage_notes": "建议注明是否为行业平均产品；若明确采用低碳水泥/高掺合料水泥，应另选对应因子或补充说明。"
+  },
+  {
+    "id": "F004", "type": "material", "name": "结构钢（通用）", "value": 1.85, "unit": "kgCO₂e/kg",
+    "source": "CLCD", "version": "v1.0", "year": "2022",
+    "spatial_scope": "全国平均",
+    "spatial_note": "不同工艺路线（长流程/电炉）差异可能较大。",
+    "boundary_note": "钢材生产阶段排放因子（不含运输、施工安装、使用与报废回收阶段）。",
+    "application_examples": ["桥梁结构构件（梁、桁架等）","房建承重结构（梁、柱等）","水工结构支撑件与钢构件"],
+    "caution_examples": ["高合金钢、不锈钢、耐候钢等特殊钢材","明确使用高比例再生钢或电炉钢的项目（口径可能不一致）"],
+    "usage_notes": "本因子为通用结构钢平均水平，未区分具体钢号与工艺路线；精细核算时应补充钢材来源与工艺说明。"
+  },
+  {
+    "id": "F005", "type": "transport", "name": "公路运输（重型柴油货车）", "value": 0.11, "unit": "kgCO₂e/t·km",
+    "source": "行业系数", "version": "v1.0", "year": "2021",
+    "spatial_scope": "全国平均",
+    "spatial_note": "载重率、道路条件与空驶率会显著影响结果。",
+    "boundary_note": "运输服务排放因子（以货物质量-距离计量）；不包含车辆制造、道路基础设施建设等。",
+    "application_examples": ["材料从供应地运输至施工现场（砂石料、水泥、钢材等）","弃土/弃渣外运"],
+    "caution_examples": ["运距极短且频繁装卸（怠速/装卸影响大）","冷链、危险品等特殊运输（车辆与能耗不同）"],
+    "usage_notes": "建议记录平均运距、空驶率与载重率；有条件可用项目台班数据校核。"
+  },
+  {
+    "id": "F006", "type": "equipment", "name": "挖掘机台班（220kW）", "value": 250, "unit": "kgCO₂e/台班",
+    "source": "交通定额", "version": "v1.0", "year": "2020",
+    "spatial_scope": "行业平均",
+    "spatial_note": "不同负载率与工况差异可能导致偏差。",
+    "boundary_note": "按台班计量的设备作业排放（通常基于燃料消耗折算）；不包含设备制造与折旧。",
+    "application_examples": ["土石方开挖与装运作业","场地整平、基坑开挖"],
+    "caution_examples": ["高寒/高温等极端环境（油耗变化显著）","排放标准差异明显（国三/国四/国五等）"],
+    "usage_notes": "建议注明台班口径与燃料折算来源；若有实测油耗，可替换。"
+  },
+  {
+    "id": "F007", "type": "process", "name": "熟料煅烧过程排放（占比法）", "value": 0.52, "unit": "kgCO₂e/kg clinker",
+    "source": "IPCC", "version": "v1.0", "year": "2019",
+    "spatial_scope": "方法学口径（通用）",
+    "spatial_note": "不同原料碳酸盐含量会影响过程排放。",
+    "boundary_note": "过程排放因子（化学分解产生的CO₂）；不包含燃料燃烧、用电与上游原料开采。",
+    "application_examples": ["水泥生产过程排放拆分核算","区分过程排放与能源排放的情景"],
+    "caution_examples": ["原料配方差异显著或替代原料","需要企业级工艺数据精细核算"],
+    "usage_notes": "建议明确该因子代表过程排放项；如有碳酸盐含量数据，可用企业数据替换。"
+  },
+  {
+    "id": "F008", "type": "waste", "name": "废旧沥青回收（系统扩展抵扣）", "value": -15, "unit": "kgCO₂e/t",
+    "source": "文献综述", "version": "v1.0", "year": "2022",
+    "spatial_scope": "案例平均",
+    "spatial_note": "抵扣口径与替代产品假设会影响结果方向与大小。",
+    "boundary_note": "回收利用阶段系统扩展抵扣示例；抵扣基于替代产品假设；不包含具体项目工艺差异。",
+    "application_examples": ["道路养护与再生利用情景（RAP回收）","体现资源化利用减排效益的模型"],
+    "caution_examples": ["替代产品不明确或替代比例不确定","需严格遵循特定LCA标准的情景（核对系统扩展口径）"],
+    "usage_notes": "负值代表替代效益。建议说明替代对象/比例/系统边界，避免误解。"
+  }
+]

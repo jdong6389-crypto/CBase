@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>基础设施碳排放因子库（因子本体 + 因子包）</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- FontAwesome -->
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --primary:#0d6efd;
+      --bg:#f4f6f9;
+      --card:#ffffff;
+      --muted:#6c757d;
+      --border:#e5e7eb;
+      --header-h:50px;
+      --sidebar-w:180px;
+      --sidebar-collapsed-w:60px;
+    }
+    body{
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      overflow: hidden;
+    }
+
+    /* =========================
+       [UI-01] 顶部导航（移除）
+       ========================= */
+
+    /* =========================
+       [UI-02] 主布局
+       ========================= */
+    .layout-wrapper{
+      display:flex;
+      height: 100vh;
+    }
+    .sidebar{
+      width: var(--sidebar-w);
+      background:#fff;
+      border-right: 1px solid var(--border);
+      overflow-y:auto;
+      overflow-x: visible;
+      padding: 18px 0 16px 0;
+      transition: width 0.3s ease;
+      position: relative;
+    }
+    .sidebar.collapsed{
+      width: var(--sidebar-collapsed-w);
+      padding: 10px 0;
+    }
+
+    /* 侧边栏图标模式 */
+    .sidebar-icon{
+      position: relative;
+      padding: 18px 0;
+      cursor: pointer;
+      border-left: 4px solid transparent;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .sidebar-icon:hover{
+      background:#f5f7fb;
+    }
+    .sidebar-icon.active{
+      background:#e7f1ff;
+      border-left-color: var(--primary);
+    }
+    .sidebar-icon i{
+      font-size: 1.4rem;
+      color: #374151;
+    }
+    .sidebar-icon.active i{
+      color: var(--primary);
+    }
+
+    /* 自定义工具提示 */
+    .custom-tooltip{
+      position: fixed;
+      background: #374151;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      z-index: 99999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .custom-tooltip.visible{
+      opacity: 1;
+    }
+
+    /* 展开模式下的侧边栏 */
+    .sidebar-expanded-item{
+      color:#374151;
+      padding: 12px 18px;
+      border-left: 4px solid transparent;
+      cursor: pointer;
+      user-select:none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar-expanded-item:hover{
+      background:#f5f7fb;
+      color: var(--primary);
+    }
+    .sidebar-expanded-item.active{
+      background:#e7f1ff;
+      color: var(--primary);
+      border-left-color: var(--primary);
+      font-weight: 700;
+    }
+
+    /* 收起按钮 */
+    .collapse-btn{
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: #f5f7fb;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .collapse-btn:hover{
+      background: #e7f1ff;
+      color: var(--primary);
+    }
+    .sidebar.collapsed .collapse-btn{
+      display: none;
+    }
+
+    .main{
+      flex:1;
+      overflow-y:auto;
+      padding: 18px;
+    }
+
+    /* =========================
+       [UI-03] 左侧栏：三个主入口
+       ========================= */
+    .nav-category{
+      font-size: .82rem;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 800;
+      padding: 10px 18px;
+      letter-spacing:.5px;
+    }
+    .nav-link{
+      color:#374151;
+      padding: 10px 18px;
+      border-left: 4px solid transparent;
+      cursor: pointer;
+      user-select:none;
+    }
+    .nav-link:hover{
+      background:#f5f7fb;
+      color: var(--primary);
+    }
+    .nav-link.active{
+      background:#e7f1ff;
+      color: var(--primary);
+      border-left-color: var(--primary);
+      font-weight: 700;
+    }
+    .nav-sub{
+      padding-left: 34px;
+      font-size: .92rem;
+    }
+
+    /* 视图切换控制 */
+    .view-section{
+      display: none;
+    }
+    .view-section.active{
+      display: block;
+    }
+    .factor-type-panel{
+      display: block;
+    }
+
+    /* =========================
+       [UI-04] 卡片/工具条
+       ========================= */
+    .cardx{
+      background: var(--card);
+      border:1px solid rgba(0,0,0,.02);
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.03);
+    }
+    .toolbar{
+      padding: 14px;
+    }
+    .database-search-input{
+      font-size: 1.2rem;
+      padding: 12px 16px;
+      border-radius: 25px;
+      border: 2px solid #000;
+      background-color: var(--bg);
+    }
+    .database-search-input::placeholder{
+      font-size: 1rem;
+    }
+    .database-search-input:focus{
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+    }
+    .database-search-btn{
+      border-radius: 25px;
+      border: 2px solid #000;
+      background-color: #000;
+      color: #fff;
+      padding: 12px 24px;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+    }
+    .database-search-btn:hover{
+      background-color: #333;
+      border-color: #333;
+    }
+    .database-search-btn:active{
+      transform: scale(0.98);
+    }
+
+    /* 数据库视图头部样式 */
+    .database-header{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      padding: 0 20px;
+      width: 75%;
+      margin: 0 auto;
+    }
+    .database-logo{
+      position: fixed;
+      left: calc(var(--sidebar-w) + 20px);
+      top: 20px;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #000;
+      letter-spacing: -0.5px;
+      z-index: 1000;
+      transition: left 0.3s ease;
+    }
+    /* 当边栏收起时，Logo 也相应移动 */
+    .sidebar.collapsed ~ main .database-logo,
+    .sidebar.collapsed + .main .database-logo,
+    .sidebar.collapsed ~ * .database-logo{
+      left: calc(var(--sidebar-collapsed-w) + 20px);
+    }
+    .database-prompt{
+      font-size: 1.65rem;
+      color: #000;
+      text-align: center;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+    .table thead th{
+      background:#f8f9fa;
+      border-bottom:2px solid #e5e7eb;
+      font-weight: 700;
+      color:#374151;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border: 1px solid #e5e7eb;
+      background:#fff;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: .83rem;
+      color:#374151;
+    }
+    .muted{ color: var(--muted); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+    /* =========================
+       [UI-05] 因子包页面：左右分栏
+       ========================= */
+    .pkg-wrap{
+      display:flex;
+      gap: 12px;
+      align-items: stretch;
+    }
+    .pkg-left{
+      width: 340px;
+      min-width: 320px;
+      max-width: 380px;
+    }
+    .pkg-right{
+      flex:1;
+      min-width: 520px;
+    }
+    .list-group-item{
+      cursor: pointer;
+    }
+    .list-group-item.active{
+      background: #e7f1ff;
+      border-color:#cfe2ff;
+      color:#0b5ed7;
+      font-weight: 800;
+    }
+
+    /* =========================
+       [UI-06] 因子库：名称可点击（打开因子详情）
+       ========================= */
+    .factor-link{
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .factor-link:hover{ opacity: .85; }
+
+    /* =========================
+       [DETAIL-UI] 详情页小布局增强
+       ========================= */
+    .detail-kv{
+      display:flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .detail-section-title{
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .detail-subtitle{
+      font-weight: 700;
+      color:#111827;
+      margin-bottom: 6px;
+    }
+    .detail-box{
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 自定义工具提示元素 -->
+  <div id="customTooltip" class="custom-tooltip"></div>
+
+  <!-- =========================
+       [UI-01] 顶部导航（简化版）
+       ========================= -->
+  <div class="layout-wrapper">
+
+    <!-- =========================
+         [IA-01] 左侧栏：收起/展开模式
+         ========================= -->
+    <aside class="sidebar collapsed" id="mainSidebar">
+      <!-- 收起按钮（展开模式显示） -->
+      <button class="collapse-btn" onclick="UI.toggleSidebar()" title="收起边栏">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+
+      <!-- 图标模式（收起状态） -->
+      <div id="sidebarIconMode" style="display: flex; flex-direction: column;">
+        <!-- 顶部展示图标（仅展示，悬浮显示"打开边栏"） -->
+        <div class="sidebar-icon" onclick="UI.toggleSidebar()" title="打开边栏">
+          <i class="fa-solid fa-layer-group"></i>
+        </div>
+
+        <!-- 功能图标 -->
+        <div class="sidebar-icon active" onclick="UI.switchMainView('database', event)" title="数据库">
+          <i class="fa-solid fa-database"></i>
+        </div>
+
+        <div class="sidebar-icon" onclick="UI.switchMainView('library', event)" title="因子库">
+          <i class="fa-solid fa-book"></i>
+        </div>
+
+        <div class="sidebar-icon" onclick="UI.switchMainView('packages', event)" title="因子包">
+          <i class="fa-solid fa-boxes-stacked"></i>
+        </div>
+      </div>
+
+      <!-- 展开模式（完整文字） -->
+      <div id="sidebarExpandedMode" style="display: none;">
+        <div class="nav-category">主功能入口</div>
+
+        <div id="navDatabase" class="sidebar-expanded-item active" onclick="UI.switchMainView('database', event)">
+          <i class="fa-solid fa-database"></i> 数据库
+        </div>
+
+        <div id="navLibrary" class="sidebar-expanded-item" onclick="UI.switchMainView('library', event)">
+          <i class="fa-solid fa-book"></i> 因子库
+        </div>
+
+        <div id="navPackages" class="sidebar-expanded-item" onclick="UI.switchMainView('packages', event)">
+          <i class="fa-solid fa-boxes-stacked"></i> 因子包
+        </div>
+      </div>
+    </aside>
+
+    <!-- =========================
+         [UI-02] 主内容区（三个独立视图）
+         ========================= -->
+    <main class="main">
+
+      <!-- =========================================================
+           [VIEW-01] 数据库视图：搜索 + 结果
+           ========================================================= -->
+      <div id="viewDatabase" class="view-section">
+        <div style="min-height: calc(100vh - 70px); display: flex; flex-direction: column; width: 100%;">
+          <!-- Logo（固定在左上角） -->
+          <div class="database-logo">CBase</div>
+
+          <!-- 提示文字（在 3/8 位置） -->
+          <div style="flex: 0 0 auto; height: 37.5vh; display: flex; flex-direction: column; justify-content: center; width: 100%;">
+            <div class="database-header">
+              <div class="database-prompt">你想查什么？</div>
+            </div>
+          </div>
+
+          <!-- 搜索框（在页面中间位置） -->
+          <div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding-top: 40px;">
+            <div id="searchContainer" style="width: 75%; display: flex; flex-direction: column; gap: 24px;">
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <input id="searchInputDatabase" type="text" class="database-search-input form-control"
+                       style="flex: 1;"
+                       placeholder="搜索因子：名称 / 关键词 / 来源 / 单位..."
+                       onkeypress="if(event.key === 'Enter') UI.executeDatabaseSearch()">
+                <button class="database-search-btn" type="button" onclick="UI.executeDatabaseSearch()">
+                  <i class="fa-solid fa-magnifying-glass me-2"></i>搜索
+                </button>
+              </div>
+
+              <!-- 搜索结果表格（搜索后显示在搜索框下方） -->
+              <div id="databaseResults" class="cardx" style="display: none; width: 100%;">
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                  <table class="table table-hover align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th style="width:70%">名称</th>
+                        <th style="width:20%">来源</th>
+                        <th style="width:10%">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody id="databaseTableBody"></tbody>
+                  </table>
+                </div>
+                <div class="text-center mt-3 small muted">
+                  共找到 <span id="databaseResultCount">0</span> 条结果
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- =========================================================
+           [VIEW-02] 因子库视图：分类 + 表格
+           ========================================================= -->
+      <div id="viewLibrary" class="view-section">
+
+        <!-- [LIB-LEFT] 左侧分类栏 -->
+        <div id="factorTypePanel" class="cardx mb-3" style="padding: 12px;">
+          <div class="row g-2 align-items-center">
+            <div class="col-md-12">
+              <div class="input-group">
+                <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input id="searchInputLibrary" type="text" class="form-control border-start-0"
+                       placeholder="搜索因子：名称 / 关键词 / 来源 / 单位..."
+                       onkeyup="UI.applyAllLibraryFilters()">
+              </div>
+            </div>
+          </div>
+
+          <!-- 分类标签行 -->
+          <div class="mt-3">
+            <button id="typeBtnAll" class="btn btn-outline-primary btn-sm active me-2" onclick="UI.applyFactorTypeFilter('all', null)">
+              全部因子
+            </button>
+            <span id="factorTypeButtons"></span>
+          </div>
+        </div>
+
+        <!-- [LIB-TABLE] 因子表格 -->
+        <div class="cardx">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th style="width:70%">名称</th>
+                  <th style="width:20%">来源</th>
+                  <th style="width:10%">操作</th>
+                </tr>
+              </thead>
+              <tbody id="factorTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="text-center mt-3 small muted">
+          共显示 <span id="factorCount">0</span> 条因子（本体唯一）｜
+          因子包总数 <span id="packageCountBadge">0</span> ｜ 使用项总数 <span id="usageCountBadge">0</span>
+        </div>
+      </div>
+
+      <!-- =========================================================
+           [VIEW-03] 因子包视图：左右分栏
+           ========================================================= -->
+      <div id="viewPackages" class="view-section">
+
+        <div class="pkg-wrap">
+          <!-- [PKG-01] 左侧：因子包列表 -->
+          <div class="pkg-left">
+            <div class="cardx p-3 mb-2">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="fw-bold"><i class="fa-solid fa-box-open me-2 text-primary"></i>因子包列表</div>
+                <button class="btn btn-sm btn-success" type="button" onclick="UI.openCreatePackageModal()">
+                  <i class="fa-solid fa-plus"></i>
+                </button>
+              </div>
+              <div class="mt-2 small muted">
+                因子包用于"把因子放进你的工程过程里"，用于后续计算与追溯。
+              </div>
+            </div>
+
+            <div class="cardx p-2">
+              <div class="list-group" id="packageList"></div>
+            </div>
+          </div>
+
+          <!-- [PKG-02] 右侧：当前因子包详情（使用项列表） -->
+          <div class="pkg-right">
+            <div class="cardx p-3 mb-2">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="fw-bold" id="activePkgTitle">
+                    <i class="fa-solid fa-circle-info me-2 text-primary"></i>请选择一个因子包
+                  </div>
+                  <div class="small muted" id="activePkgMeta">—</div>
+                </div>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-secondary btn-sm" type="button" onclick="UI.renameActivePackage()">
+                    <i class="fa-solid fa-pen me-1"></i> 重命名
+                  </button>
+                  <button class="btn btn-outline-danger btn-sm" type="button" onclick="UI.deleteActivePackage()">
+                    <i class="fa-solid fa-trash me-1"></i> 删除包
+                  </button>
+                  <button class="btn btn-primary btn-sm" type="button" onclick="UI.openAddToPackageFromPackages()">
+                    <i class="fa-solid fa-plus me-1"></i> 添加使用项
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="cardx">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th style="width:10%">使用项ID</th>
+                      <th style="width:22%">因子</th>
+                      <th style="width:12%">对象</th>
+                      <th style="width:14%">阶段</th>
+                      <th style="width:22%">过程/工序</th>
+                      <th style="width:10%">备注</th>
+                      <th style="width:10%">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="usageTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <div class="small muted">
+                当前包使用项：<span id="activePkgUsageCount">0</span> 条
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary btn-sm" type="button" onclick="UI.exportActivePackageCSV()">
+                  <i class="fa-solid fa-file-csv me-1"></i> 导出 CSV
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- =========================================================
+       [MODAL-01] 新建因子包
+       ========================================================= -->
+  <div class="modal fade" id="createPackageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-box-open text-primary me-2"></i>新建因子包</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label small fw-bold">因子包名称</label>
+          <input id="pkgNameInput" class="form-control" placeholder="例如：公路工程-施工阶段核算包">
+          <div class="small muted mt-2">
+            提示：因子包用于"把因子放到你的工程过程里"，后续可导出给计算模块。
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">取消</button>
+          <button class="btn btn-success" type="button" onclick="PKG.createPackage()">创建</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       [MODAL-02] 将因子加入因子包（创建"使用项 FactorUsage"）
+       ========================================================= -->
+  <div class="modal fade" id="addToPackageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-square-plus text-primary me-2"></i>添加到因子包（创建使用项）</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-3">
+
+            <!-- 左：因子本体信息 -->
+            <div class="col-md-5 border-end">
+              <div class="small muted">将要引用的因子（本体唯一）</div>
+              <div class="fw-bold mt-1" id="addModalFactorName">—</div>
+              <div class="mt-2">
+                <span class="pill"><i class="fa-solid fa-tag"></i><span id="addModalFactorType">—</span></span>
+                <span class="pill ms-2"><i class="fa-solid fa-ruler"></i><span id="addModalFactorUnit">—</span></span>
+              </div>
+              <div class="mt-2 small muted" id="addModalFactorSource">—</div>
+
+              <hr>
+              <div class="small muted">
+                说明：这里不会修改因子本体，只会在因子包里创建一个"使用项"（用在哪个对象/阶段/过程）。
+              </div>
+            </div>
+
+            <!-- 右：使用归类信息 -->
+            <div class="col-md-7">
+              <div class="row g-2">
+                <div class="col-12">
+                  <label class="form-label small fw-bold">选择因子包</label>
+                  <select id="addModalPkgSelect" class="form-select"></select>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small fw-bold">工程对象</label>
+                  <select id="usageObj" class="form-select">
+                    <option value="road">公路工程</option>
+                    <option value="waterway">水路工程</option>
+                    <option value="general">通用</option>
+                  </select>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small fw-bold">生命周期阶段</label>
+                  <select id="usageStage" class="form-select">
+                    <option value="raw">原料与材料阶段</option>
+                    <option value="construction">施工阶段</option>
+                    <option value="operation">运营与维护阶段</option>
+                    <option value="end">报废与回收阶段</option>
+                  </select>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small fw-bold">过程/工序（可自定义）</label>
+                  <input id="usageProcess" class="form-control" placeholder="例如：路基土石方 / 挖掘机燃料 / 沥青拌合...">
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label small fw-bold">备注（可选）</label>
+                  <input id="usageNote" class="form-control" placeholder="例如：按定额/按现场台班/按设备清单...">
+                </div>
+
+                <div class="col-12">
+                  <div class="alert alert-primary py-2 mb-0">
+                    <div class="small">
+                      你现在做的"归类"，只发生在<strong>因子包</strong>中：方便后续直接用于计算与追溯。
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">取消</button>
+          <button class="btn btn-primary" type="button" onclick="PKG.createUsageFromModal()">
+            <i class="fa-solid fa-check me-1"></i> 创建使用项
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       [MODAL-03] 编辑使用项
+       ========================================================= -->
+  <div class="modal fade" id="editUsageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>编辑使用项</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="small muted">使用项 ID：<span class="mono" id="editUsageId">—</span></div>
+          <div class="fw-bold mt-1" id="editUsageFactorName">—</div>
+
+          <div class="row g-2 mt-2">
+            <div class="col-md-4">
+              <label class="form-label small fw-bold">工程对象</label>
+              <select id="editObj" class="form-select">
+                <option value="road">公路工程</option>
+                <option value="waterway">水路工程</option>
+                <option value="general">通用</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold">生命周期阶段</label>
+              <select id="editStage" class="form-select">
+                <option value="raw">原料与材料阶段</option>
+                <option value="construction">施工阶段</option>
+                <option value="operation">运营与维护阶段</option>
+                <option value="end">报废与回收阶段</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold">过程/工序</label>
+              <input id="editProcess" class="form-control" placeholder="例如：混凝土浇筑 / 运输...">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold">备注</label>
+              <input id="editNote" class="form-control" placeholder="可选">
+            </div>
+          </div>
+
+          <div class="alert alert-warning py-2 mt-3 mb-0 small">
+            仅修改"使用归类"，不会更改因子本体数值或口径。
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">取消</button>
+          <button class="btn btn-primary" type="button" onclick="PKG.saveUsageEdits()">
+            <i class="fa-solid fa-save me-1"></i> 保存
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       [MODAL-04] 因子详情页（因子本体标签）
+       - 入口：点击"因子名称"
+       ========================================================= -->
+  <div class="modal fade" id="factorDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">
+            <i class="fa-solid fa-circle-info text-primary me-2"></i>因子详情
+          </h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <!-- [DETAIL-01] 模块1：基本信息 -->
+          <div class="detail-box mb-3">
+            <div class="small muted">因子名称</div>
+            <div class="fw-bold fs-5" id="fd_name">—</div>
+
+            <div class="detail-kv mt-2">
+              <span class="pill"><i class="fa-solid fa-fingerprint"></i><span class="mono" id="fd_id">—</span></span>
+              <span class="pill"><i class="fa-solid fa-tag"></i><span id="fd_type">—</span></span>
+              <span class="pill"><i class="fa-solid fa-hashtag"></i><span id="fd_version">—</span></span>
+              <span class="pill"><i class="fa-solid fa-ruler-combined"></i><span id="fd_valueUnit">—</span></span>
+            </div>
+
+            <div class="small muted mt-2" id="fd_descLine">—</div>
+          </div>
+
+          <!-- [DETAIL-02] 模块2：边界与口径说明（三合一） -->
+          <div class="detail-box mb-3">
+            <div class="detail-section-title">边界与口径说明</div>
+            <div class="muted" id="fd_boundary">—</div>
+          </div>
+
+          <!-- [DETAIL-03/04] 时间/空间 -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <div class="detail-box h-100">
+                <div class="detail-section-title">时间代表性</div>
+                <div class="muted" id="fd_year">—</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-box h-100">
+                <div class="detail-section-title">空间适用范围</div>
+                <div class="muted" id="fd_spatial">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- [DETAIL-05] 工艺/产品描述/典型应用 -->
+          <div class="detail-box mb-3">
+            <div class="detail-section-title">工艺 / 产品描述 / 典型应用</div>
+            <ul class="mb-0" id="fd_applicationList"></ul>
+          </div>
+
+          <!-- [DETAIL-05B] 跨区域/不建议使用提醒（你说的"可做提醒但不智能匹配"） -->
+          <div class="detail-box mb-3">
+            <div class="detail-section-title">不建议使用/注意事项</div>
+            <ul class="mb-0" id="fd_cautionList"></ul>
+            <div class="small muted mt-2" id="fd_usageNotes">—</div>
+          </div>
+
+          <!-- [DETAIL-06] 来源/版本 -->
+          <div class="detail-box mb-0">
+            <div class="detail-section-title">来源 / 版本信息</div>
+            <div class="muted" id="fd_source">—</div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">关闭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- CloudBase 已移除，使用本地 JSON + localStorage -->
+
+  <script>
+    /******************************************************************
+     * ================================================================
+     * [DATA-00] 模拟数据库（无后端版）
+     * - FACTORS：因子本体（唯一）
+     * - PACKAGES：因子包（项目级）
+     * - USAGES：因子使用项（FactorUsage：可多次引用同一因子）
+     * ================================================================
+     ******************************************************************/
+
+    // [DATA-01] 因子类型字典（左侧栏 & 表格展示）
+    const FACTOR_TYPES = [
+      { key:'energy',    label:'能源燃料类因子', icon:'fa-bolt' },
+      { key:'material',  label:'物质材料类因子', icon:'fa-cubes' },
+      { key:'transport', label:'运输过程类因子', icon:'fa-truck' },
+      { key:'equipment', label:'机械设备类因子', icon:'fa-tractor' },
+      { key:'process',   label:'工艺过程排放类因子', icon:'fa-flask' },
+      { key:'waste',     label:'废弃与回收类因子', icon:'fa-recycle' },
+    ];
+
+    // [DATA-02] 因子本体（从 JSON 文件加载，下方为空占位）
+    let DEFAULT_FACTORS = [];
+
+    // [DATA-03] 本地存储 Key
+    const LS_KEYS = {
+      FACTORS: 'INFRA_FACTOR_LIB_FACTORS_V1',
+      PACKAGES:'INFRA_FACTOR_LIB_PACKAGES_V1',
+      USAGES:  'INFRA_FACTOR_LIB_USAGES_V1',
+    };
+
+    // [DATA-04] 运行态数据
+    let FACTORS = [];
+    let PACKAGES = [];
+    let USAGES = [];
+
+    // [STATE-00] UI 状态
+    const STATE = {
+      activeFactorType: 'all',
+      activePackageId: null,
+      pendingFactorId: null,
+      editingUsageId: null,
+      currentView: 'database', // 'database' | 'library' | 'packages' - 默认显示数据库
+    };
+
+    /******************************************************************
+     * [STORAGE-00] 纯 localStorage 存储
+     ******************************************************************/
+
+    const STORAGE = {
+      async loadAll(){
+        // 从 JSON 文件加载因子数据
+        try {
+          const resp = await fetch('data/factors.json');
+          if(resp.ok){
+            DEFAULT_FACTORS = await resp.json();
+          }
+        } catch(e){
+          console.warn('加载 factors.json 失败，使用空数组:', e);
+        }
+
+        const f = localStorage.getItem(LS_KEYS.FACTORS);
+        const p = localStorage.getItem(LS_KEYS.PACKAGES);
+        const u = localStorage.getItem(LS_KEYS.USAGES);
+
+        FACTORS  = f ? JSON.parse(f) : DEFAULT_FACTORS;
+        PACKAGES = p ? JSON.parse(p) : [];
+        USAGES   = u ? JSON.parse(u) : [];
+
+        if(!Array.isArray(FACTORS) || FACTORS.length === 0)  FACTORS = DEFAULT_FACTORS;
+        if(!Array.isArray(PACKAGES)) PACKAGES = [];
+        if(!Array.isArray(USAGES))   USAGES = [];
+      },
+
+      saveFactors(){
+        localStorage.setItem(LS_KEYS.FACTORS, JSON.stringify(FACTORS));
+      },
+      savePackages(){
+        localStorage.setItem(LS_KEYS.PACKAGES, JSON.stringify(PACKAGES));
+      },
+      saveUsages(){
+        localStorage.setItem(LS_KEYS.USAGES, JSON.stringify(USAGES));
+      },
+      saveAll(){
+        this.saveFactors();
+        this.savePackages();
+        this.saveUsages();
+      }
+    };
+
+    /******************************************************************
+     * [UTIL-00] 工具函数
+     ******************************************************************/
+    const UTIL = {
+      uid(prefix){
+        const t = Date.now().toString().slice(-6);
+        const r = Math.floor(Math.random()*1000).toString().padStart(3,'0');
+        return `${prefix}${t}${r}`;
+      },
+      typeLabel(typeKey){
+        const t = FACTOR_TYPES.find(x=>x.key===typeKey);
+        return t ? t.label : (typeKey || '—');
+      },
+      stageLabel(stage){
+        return ({
+          raw:'原料与材料阶段',
+          construction:'施工阶段',
+          operation:'运营与维护阶段',
+          end:'报废与回收阶段'
+        })[stage] || (stage || '—');
+      },
+      objLabel(obj){
+        return ({ road:'公路工程', waterway:'水路工程', general:'通用' })[obj] || (obj || '—');
+      },
+      escapeHTML(str){
+        return (str ?? '').toString()
+          .replaceAll('&','&amp;')
+          .replaceAll('<','&lt;')
+          .replaceAll('>','&gt;')
+          .replaceAll('"','&quot;')
+          .replaceAll("'","&#039;");
+      },
+      downloadText(filename, text){
+  // ===== [EXPORT-01] 下载文本/CSV：为 CSV 自动加 UTF-8 BOM，确保 Excel 打开不乱码 =====
+  const isCSV = /\.csv$/i.test(filename);
+
+  // Excel 在 Windows 下会把 CSV 当 GBK 读；加 BOM 才会按 UTF-8 解析
+  const BOM = '\uFEFF';
+  const payload = isCSV ? (BOM + text) : text;
+
+  const blob = new Blob([payload], {
+    type: isCSV ? 'text/csv;charset=utf-8;' : 'text/plain;charset=utf-8;'
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+},
+
+      // 取第一个"有内容"的值
+      pick(...vals){
+        for(const v of vals){
+          if(v === undefined || v === null) continue;
+          const s = String(v).trim();
+          if(s !== '') return v;
+        }
+        return '';
+      },
+      // 把可能是字符串/数组的字段统一成数组
+      toArray(v){
+        if(Array.isArray(v)) return v.filter(x=>String(x||'').trim()!=='');
+        if(v === undefined || v === null) return [];
+        const s = String(v).trim();
+        if(!s) return [];
+        return [s];
+      }
+    };
+
+    /******************************************************************
+     * [UI-00] UI 控制器
+     ******************************************************************/
+    const UI = {
+
+      /* [TOOLTIP-00] 初始化工具提示 */
+      initTooltips(){
+        const tooltip = document.getElementById('customTooltip');
+        const sidebar = document.getElementById('mainSidebar');
+
+        // 处理侧边栏图标的工具提示
+        const tooltipTargets = sidebar.querySelectorAll('.sidebar-icon[title]');
+        tooltipTargets.forEach(el => {
+          el.addEventListener('mouseenter', (e) => {
+            const text = el.getAttribute('title');
+            const rect = el.getBoundingClientRect();
+            tooltip.textContent = text;
+            tooltip.style.left = (rect.right + 10) + 'px';
+            tooltip.style.top = (rect.top + rect.height / 2 - tooltip.offsetHeight / 2) + 'px';
+            tooltip.classList.add('visible');
+          });
+          el.addEventListener('mouseleave', () => {
+            tooltip.classList.remove('visible');
+          });
+        });
+
+        // 处理收起按钮的工具提示
+        const collapseBtn = sidebar.querySelector('.collapse-btn[title]');
+        if(collapseBtn){
+          collapseBtn.addEventListener('mouseenter', (e) => {
+            const text = collapseBtn.getAttribute('title');
+            const rect = collapseBtn.getBoundingClientRect();
+            tooltip.textContent = text;
+            tooltip.style.left = (rect.right + 10) + 'px';
+            tooltip.style.top = (rect.top + rect.height / 2 - tooltip.offsetHeight / 2) + 'px';
+            tooltip.classList.add('visible');
+          });
+          collapseBtn.addEventListener('mouseleave', () => {
+            tooltip.classList.remove('visible');
+          });
+        }
+      },
+
+      /* [SIDEBAR-00] 切换侧边栏收起/展开 */
+      toggleSidebar(){
+        const sidebar = document.getElementById('mainSidebar');
+        const iconMode = document.getElementById('sidebarIconMode');
+        const expandedMode = document.getElementById('sidebarExpandedMode');
+
+        sidebar.classList.toggle('collapsed');
+
+        if(sidebar.classList.contains('collapsed')){
+          // 收起状态：显示图标，隐藏展开模式
+          iconMode.style.display = 'flex';
+          expandedMode.style.display = 'none';
+        }else{
+          // 展开状态：隐藏图标，显示展开模式
+          iconMode.style.display = 'none';
+          expandedMode.style.display = 'block';
+        }
+      },
+
+      /* [VIEW-00] 切换主视图（数据库 / 因子库 / 因子包） */
+      switchMainView(viewName, ev){
+        STATE.currentView = viewName;
+
+        // 更新左侧导航 active 状态（图标模式）
+        document.querySelectorAll('#sidebarIconMode .sidebar-icon').forEach((x, index) => {
+          x.classList.remove('active');
+          // index 0 是展示图标，从 index 1 开始对应 database, library, packages
+          const viewIndex = index - 1;
+          const viewNames = ['database', 'library', 'packages'];
+          if(viewIndex >= 0 && viewNames[viewIndex] === viewName){
+            x.classList.add('active');
+          }
+        });
+
+        // 更新左侧导航 active 状态（展开模式）
+        document.querySelectorAll('#sidebarExpandedMode .sidebar-expanded-item').forEach(x=>x.classList.remove('active'));
+        const navMap = {
+          'database': 'navDatabase',
+          'library': 'navLibrary',
+          'packages': 'navPackages'
+        };
+        const navId = navMap[viewName];
+        if(navId) document.getElementById(navId)?.classList.add('active');
+
+        // 切换主内容区视图
+        document.querySelectorAll('.view-section').forEach(x=>x.classList.remove('active'));
+        document.getElementById('view'+viewName.charAt(0).toUpperCase()+viewName.slice(1))?.classList.add('active');
+
+        // 根据视图刷新内容
+        if(viewName === 'database'){
+          // 切换到数据库视图时，不自动搜索，只隐藏结果
+          const dbResults = document.getElementById('databaseResults');
+          if(dbResults) dbResults.style.display = 'none';
+        }else if(viewName === 'library'){
+          UI.applyAllLibraryFilters();
+        }else if(viewName === 'packages'){
+          UI.renderPackageList();
+          UI.renderActivePackagePanel();
+        }
+      },
+
+      /* [VIEW-01] 数据库视图：执行搜索（点击按钮或按回车） */
+      executeDatabaseSearch(){
+        const q = (document.getElementById('searchInputDatabase').value || '').trim().toLowerCase();
+        const resultsDiv = document.getElementById('databaseResults');
+        const tbody = document.getElementById('databaseTableBody');
+        const countSpan = document.getElementById('databaseResultCount');
+
+        // 如果搜索框为空，隐藏结果表格
+        if(!q){
+          resultsDiv.style.display = 'none';
+          return;
+        }
+
+        // 执行搜索（搜索所有因子，不分类筛选）
+        let results = FACTORS.filter(f => {
+          const hay = `${f.id} ${f.name} ${f.unit} ${f.source} ${UTIL.typeLabel(f.type)}`.toLowerCase();
+          return hay.includes(q);
+        });
+
+        // 显示结果
+        resultsDiv.style.display = 'block';
+        tbody.innerHTML = '';
+
+        results.forEach(f => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="fw-bold">${UTIL.escapeHTML(f.name)}</td>
+            <td class="muted">${UTIL.escapeHTML(f.source || '—')}</td>
+            <td>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-outline-primary" type="button"
+                        title="查看详情"
+                        onclick="UI.openFactorDetail('${UTIL.escapeHTML(f.id)}')">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-primary" type="button"
+                        title="添加到因子包"
+                        onclick="UI.openAddToPackageModal('${UTIL.escapeHTML(f.id)}')">
+                  <i class="fa-solid fa-square-plus"></i>
+                </button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        countSpan.innerText = results.length;
+      },
+
+      /* [VIEW-03] 渲染因子类型按钮（因子库视图顶部） */
+      renderFactorTypeButtons(){
+        const host = document.getElementById('factorTypeButtons');
+        host.innerHTML = '';
+        FACTOR_TYPES.forEach(t=>{
+          const btn = document.createElement('button');
+          btn.className = 'btn btn-outline-secondary btn-sm me-2';
+          btn.innerHTML = `<i class="fa-solid ${t.icon} me-1"></i>${t.label}`;
+          btn.onclick = ()=>UI.applyFactorTypeFilter(t.key, null);
+          btn.id = `typeBtn${t.key.charAt(0).toUpperCase()+t.key.slice(1)}`;
+          host.appendChild(btn);
+        });
+      },
+
+      /* [IA-02] 渲染左侧"因子类型"导航（已废弃，保留兼容） */
+      renderFactorTypeNav(){
+        const host = document.getElementById('factorTypeNav');
+        if(host) host.innerHTML = '';
+      },
+
+      /* [IA-03] 应用"因子类型"筛选 */
+      applyFactorTypeFilter(typeKey, ev){
+        STATE.activeFactorType = typeKey;
+
+        // 更新按钮 active 状态
+        document.querySelectorAll('#factorTypePanel .btn').forEach(btn=>btn.classList.remove('active'));
+        if(typeKey === 'all'){
+          document.getElementById('typeBtnAll')?.classList.add('active');
+        }else{
+          const btn = document.getElementById(`typeBtn${typeKey.charAt(0).toUpperCase()+typeKey.slice(1)}`);
+          if(btn) btn.classList.add('active');
+        }
+
+        UI.applyAllLibraryFilters();
+      },
+
+      /* [LIB-04] 因子库：组合筛选（类型 + 搜索） */
+      applyAllLibraryFilters(){
+        const q = (document.getElementById('searchInputLibrary').value || '').trim().toLowerCase();
+        let rows = FACTORS.slice();
+
+        if(STATE.activeFactorType !== 'all'){
+          rows = rows.filter(f=>f.type===STATE.activeFactorType);
+        }
+
+        if(q){
+          rows = rows.filter(f=>{
+            const hay = `${f.id} ${f.name} ${f.unit} ${f.source} ${UTIL.typeLabel(f.type)}`.toLowerCase();
+            return hay.includes(q);
+          });
+        }
+
+        UI.renderFactorTable(rows);
+        UI.updateBadges();
+      },
+
+      /* [LIB-02] 因子库：渲染表格 */
+      renderFactorTable(factors){
+        const tbody = document.getElementById('factorTableBody');
+        tbody.innerHTML = '';
+
+        factors.forEach(f=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="fw-bold">${UTIL.escapeHTML(f.name)}</td>
+            <td class="muted">${UTIL.escapeHTML(f.source || '—')}</td>
+            <td>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-outline-primary" type="button"
+                        title="查看详情"
+                        onclick="UI.openFactorDetail('${UTIL.escapeHTML(f.id)}')">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-primary" type="button"
+                        title="添加到因子包"
+                        onclick="UI.openAddToPackageModal('${UTIL.escapeHTML(f.id)}')">
+                  <i class="fa-solid fa-square-plus"></i>
+                </button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        document.getElementById('factorCount').innerText = factors.length;
+      },
+
+      /* [DETAIL] 打开因子详情页（核心：字段兼容 + 列表渲染完善） */
+      openFactorDetail(factorId){
+        const f = FACTORS.find(x => x.id === factorId);
+        if(!f){
+          alert("找不到该因子：" + factorId);
+          return;
+        }
+
+        // 兼容不同字段名（你后续从 Excel 导入时也更稳）
+        const version = UTIL.pick(f.version, f.ver, f.version_id);
+        const boundary = UTIL.pick(f.boundary_note, f.boundary, f.boundaryNote);
+        const year = UTIL.pick(f.year, f.time_year, f.temporal_year, f.temporal, f.time);
+        const spatialScope = UTIL.pick(f.spatial_scope, f.spatialScope, f.spatial);
+        const spatialNote  = UTIL.pick(f.spatial_note, f.spatialNote, '');
+        const spatial = (spatialScope && spatialNote) ? `${spatialScope}（${spatialNote}）` : (spatialScope || spatialNote || '');
+
+        const appList = UTIL.toArray(UTIL.pick(f.application_examples, f.applications, f.applicationExamples));
+        const cautionList = UTIL.toArray(UTIL.pick(f.caution_examples, f.cautions, f.cautionExamples));
+        const usageNotes = UTIL.pick(f.usage_notes, f.note, f.notes);
+
+        // 模块1：基本信息
+        document.getElementById('fd_name').innerText = f.name || '—';
+        document.getElementById('fd_id').innerText = f.id || '—';
+        document.getElementById('fd_type').innerText = UTIL.typeLabel(f.type) || '—';
+        document.getElementById('fd_version').innerText = version || '—';
+        document.getElementById('fd_valueUnit').innerText =
+          (f.value !== undefined && f.value !== null && f.unit) ? `${Number(f.value)} ${f.unit}` : '—';
+
+        // 一行描述：来源 + 年份（帮助快速判断）
+        const descLine = [
+          f.source ? `来源：${f.source}` : '',
+          year ? `年份：${year}` : '',
+          spatialScope ? `空间：${spatialScope}` : ''
+        ].filter(Boolean).join(' ｜ ');
+        document.getElementById('fd_descLine').innerText = descLine || '—';
+
+        // 模块2：边界
+        document.getElementById('fd_boundary').innerText = boundary || '—';
+
+        // 模块3/4：时间/空间
+        document.getElementById('fd_year').innerText = year || '—';
+        document.getElementById('fd_spatial').innerText = spatial || '—';
+
+        // 模块5：应用列表
+        const ulA = document.getElementById('fd_applicationList');
+        ulA.innerHTML = '';
+        if(appList.length === 0){
+          ulA.innerHTML = `<li class="muted">—</li>`;
+        }else{
+          appList.forEach(t=>{
+            const li = document.createElement('li');
+            li.innerText = t;
+            ulA.appendChild(li);
+          });
+        }
+
+        // 模块5B：注意事项
+        const ulC = document.getElementById('fd_cautionList');
+        ulC.innerHTML = '';
+        if(cautionList.length === 0){
+          ulC.innerHTML = `<li class="muted">—</li>`;
+        }else{
+          cautionList.forEach(t=>{
+            const li = document.createElement('li');
+            li.innerText = t;
+            ulC.appendChild(li);
+          });
+        }
+
+        document.getElementById('fd_usageNotes').innerText = usageNotes || '—';
+
+        // 模块6：来源/版本
+        const src = `${f.source || '—'}${version ? (' / ' + version) : ''}`.trim();
+        document.getElementById('fd_source').innerText = src || '—';
+
+        new bootstrap.Modal(document.getElementById('factorDetailModal')).show();
+      },
+
+      /* [LIB-05] 重置因子库筛选 */
+      resetLibraryFilters(){
+        document.getElementById('searchInputLibrary').value = '';
+        STATE.activeFactorType = 'all';
+
+        document.querySelectorAll('#factorTypePanel .btn').forEach(btn=>btn.classList.remove('active'));
+        document.getElementById('typeBtnAll')?.classList.add('active');
+
+        UI.applyAllLibraryFilters();
+      },
+
+      /* [PKG-03] 在因子包页引导添加 */
+      openAddToPackageFromPackages(){
+        if(!STATE.activePackageId){
+          alert('请先在左侧选择一个因子包。');
+          return;
+        }
+        UI.switchMainView('library', null);
+        alert('请在因子库中选择一个因子,点击"+"添加到当前因子包。');
+      },
+
+      /* [MODAL-01] 新建因子包 */
+      openCreatePackageModal(){
+        document.getElementById('pkgNameInput').value = '';
+        new bootstrap.Modal(document.getElementById('createPackageModal')).show();
+      },
+
+      /* [MODAL-02] 打开"添加到因子包" */
+      openAddToPackageModal(factorId){
+        STATE.pendingFactorId = factorId;
+
+        const f = FACTORS.find(x=>x.id===factorId);
+        if(!f) return;
+
+        document.getElementById('addModalFactorName').innerText = f.name;
+        document.getElementById('addModalFactorType').innerText = UTIL.typeLabel(f.type);
+        document.getElementById('addModalFactorUnit').innerText = f.unit || '—';
+        document.getElementById('addModalFactorSource').innerText =
+          `来源/版本：${(f.source||'—')}${f.version ? (' / ' + f.version) : ''}`;
+
+        UI.fillPackageSelect('addModalPkgSelect', STATE.activePackageId);
+
+        document.getElementById('usageObj').value = 'road';
+        document.getElementById('usageStage').value = 'construction';
+        document.getElementById('usageProcess').value = '';
+        document.getElementById('usageNote').value = '';
+
+        new bootstrap.Modal(document.getElementById('addToPackageModal')).show();
+      },
+
+      /* [PKG-03] 在因子包页引导添加 */
+      openAddToPackageFromPackages(){
+        if(!STATE.activePackageId){
+          alert('请先在左侧选择一个因子包。');
+          return;
+        }
+        UI.switchTab('libraryTabBtn');
+        alert('请在因子库中选择一个因子，点击"+"添加到当前因子包。');
+      },
+
+      /* [PKG-01] 渲染因子包列表 */
+      renderPackageList(){
+        const host = document.getElementById('packageList');
+        host.innerHTML = '';
+
+        if(PACKAGES.length===0){
+          host.innerHTML = `<div class="p-3 small muted">暂无因子包。点击左侧"新建因子包"。</div>`;
+          return;
+        }
+
+        PACKAGES.forEach(pkg=>{
+          const item = document.createElement('div');
+          item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+          if(pkg.id === STATE.activePackageId) item.classList.add('active');
+
+          const count = USAGES.filter(u=>u.packageId===pkg.id).length;
+
+          item.innerHTML = `
+            <div>
+              <div class="fw-bold">${UTIL.escapeHTML(pkg.name)}</div>
+              <div class="small muted">使用项 ${count} 条</div>
+            </div>
+            <span class="badge bg-light text-dark mono">${UTIL.escapeHTML(pkg.id)}</span>
+          `;
+
+          item.onclick = ()=>{
+            STATE.activePackageId = pkg.id;
+            UI.renderPackageList();
+            UI.renderActivePackagePanel();
+            UI.updateBadges();
+          };
+
+          host.appendChild(item);
+        });
+      },
+
+      /* [PKG-02] 渲染当前因子包详情 */
+      renderActivePackagePanel(){
+        const title = document.getElementById('activePkgTitle');
+        const meta  = document.getElementById('activePkgMeta');
+        const tbody = document.getElementById('usageTableBody');
+
+        if(!STATE.activePackageId){
+          title.innerHTML = `<i class="fa-solid fa-circle-info me-2 text-primary"></i>请选择一个因子包`;
+          meta.innerText = '—';
+          tbody.innerHTML = `<tr><td colspan="7" class="text-center muted py-4">未选择因子包</td></tr>`;
+          document.getElementById('activePkgUsageCount').innerText = '0';
+          return;
+        }
+
+        const pkg = PACKAGES.find(p=>p.id===STATE.activePackageId);
+        const list = USAGES.filter(u=>u.packageId===STATE.activePackageId);
+
+        title.innerHTML = `<i class="fa-solid fa-box-open me-2 text-primary"></i>${UTIL.escapeHTML(pkg?.name || '（未命名）')}`;
+        meta.innerText  = `包ID：${pkg?.id || '-'} ｜ 创建时间：${pkg?.createdAt || '-'}`;
+
+        if(list.length===0){
+          tbody.innerHTML = `<tr><td colspan="7" class="text-center muted py-4">该因子包暂无使用项。请到因子库点击"+"添加。</td></tr>`;
+          document.getElementById('activePkgUsageCount').innerText = '0';
+          return;
+        }
+
+        const stageOrder = { raw:1, construction:2, operation:3, end:4 };
+        list.sort((a,b)=>(stageOrder[a.stage]||9)-(stageOrder[b.stage]||9));
+
+        tbody.innerHTML = '';
+        list.forEach(u=>{
+          const f = FACTORS.find(x=>x.id===u.factorId);
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="mono text-muted">${UTIL.escapeHTML(u.id)}</td>
+            <td>
+              <div class="fw-bold">${UTIL.escapeHTML(f?.name || u.factorId)}</div>
+              <div class="small muted">${UTIL.escapeHTML(UTIL.typeLabel(f?.type || ''))} ｜ ${UTIL.escapeHTML(f?.unit || '')}</div>
+            </td>
+            <td>${UTIL.escapeHTML(UTIL.objLabel(u.obj))}</td>
+            <td>${UTIL.escapeHTML(UTIL.stageLabel(u.stage))}</td>
+            <td>${UTIL.escapeHTML(u.process || '—')}</td>
+            <td class="muted">${UTIL.escapeHTML(u.note || '')}</td>
+            <td>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-outline-primary" type="button" title="查看详情" onclick="UI.openFactorDetail('${u.factorId}')">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-primary" type="button" onclick="UI.openEditUsageModal('${u.id}')">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" type="button" onclick="PKG.deleteUsage('${u.id}')">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        document.getElementById('activePkgUsageCount').innerText = list.length.toString();
+      },
+
+      /* [MODAL-03] 打开"编辑使用项" */
+      openEditUsageModal(usageId){
+        const u = USAGES.find(x=>x.id===usageId);
+        if(!u) return;
+        const f = FACTORS.find(x=>x.id===u.factorId);
+
+        STATE.editingUsageId = usageId;
+
+        document.getElementById('editUsageId').innerText = usageId;
+        document.getElementById('editUsageFactorName').innerText = f ? f.name : u.factorId;
+
+        document.getElementById('editObj').value = u.obj;
+        document.getElementById('editStage').value = u.stage;
+        document.getElementById('editProcess').value = u.process || '';
+        document.getElementById('editNote').value = u.note || '';
+
+        new bootstrap.Modal(document.getElementById('editUsageModal')).show();
+      },
+
+      /* [PKG-04] 下拉：填充可选因子包 */
+      fillPackageSelect(selectId, preferPkgId=null){
+        const sel = document.getElementById(selectId);
+        sel.innerHTML = '';
+
+        if(PACKAGES.length===0){
+          sel.innerHTML = `<option value="">（暂无因子包，请先创建）</option>`;
+          return;
+        }
+
+        PACKAGES.forEach(p=>{
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = `${p.name}（${p.id}）`;
+          sel.appendChild(opt);
+        });
+
+        const candidate = (preferPkgId && PACKAGES.some(x=>x.id===preferPkgId)) ? preferPkgId : PACKAGES[0].id;
+        sel.value = candidate;
+      },
+
+      /* [UI-06] 更新徽标 */
+      updateBadges(){
+        document.getElementById('packageCountBadge').innerText = PACKAGES.length.toString();
+        document.getElementById('usageCountBadge').innerText = USAGES.length.toString();
+      },
+
+      /* [PKG-05] 重命名/删除因子包 */
+      async renameActivePackage(){
+        if(!STATE.activePackageId) return alert('未选择因子包。');
+        const pkg = PACKAGES.find(p=>p.id===STATE.activePackageId);
+        if(!pkg) return;
+
+        const name = prompt('请输入新的因子包名称：', pkg.name);
+        if(!name || !name.trim()) return;
+
+        pkg.name = name.trim();
+        STORAGE.savePackages();
+
+        UI.renderPackageList();
+        UI.renderActivePackagePanel();
+      },
+
+      async deleteActivePackage(){
+        if(!STATE.activePackageId) return alert('未选择因子包。');
+        const pkg = PACKAGES.find(p=>p.id===STATE.activePackageId);
+        if(!pkg) return;
+
+        const ok = confirm(`确认删除因子包：${pkg.name}？（将同时删除该包内所有使用项）`);
+        if(!ok) return;
+
+        PACKAGES = PACKAGES.filter(p=>p.id!==STATE.activePackageId);
+        USAGES = USAGES.filter(u=>u.packageId!==STATE.activePackageId);
+        STORAGE.savePackages();
+        STORAGE.saveUsages();
+
+        STATE.activePackageId = null;
+
+        UI.renderPackageList();
+        UI.renderActivePackagePanel();
+        UI.updateBadges();
+      },
+
+      /* [EXPORT-01] 导出：当前因子包 JSON */
+      exportActivePackageJSON(){
+        if(!STATE.activePackageId) return alert('未选择因子包。');
+        const pkg = PACKAGES.find(p=>p.id===STATE.activePackageId);
+        const list = USAGES.filter(u=>u.packageId===STATE.activePackageId);
+
+        const payload = {
+          package: pkg,
+          usages: list,
+          factorsSnapshot: list.map(u=>FACTORS.find(f=>f.id===u.factorId)).filter(Boolean),
+          exportedAt: new Date().toISOString(),
+          note: '因子库（本体唯一）+ 因子包（使用项）导出'
+        };
+
+        UTIL.downloadText(`${pkg.name || pkg.id}_factor_package.json`, JSON.stringify(payload, null, 2));
+      },
+
+      /* [EXPORT-02] 导出：当前因子包 CSV */
+      exportActivePackageCSV(){
+        if(!STATE.activePackageId) return alert('未选择因子包。');
+        const pkg = PACKAGES.find(p=>p.id===STATE.activePackageId);
+        const list = USAGES.filter(u=>u.packageId===STATE.activePackageId);
+
+        // 中文列名，移除使用项ID，添加数值列
+        const header = ['因子名称','因子类型','数值','单位','工程对象','生命周期阶段','过程/工序','备注'].join(',');
+        const lines = list.map(u=>{
+          const f = FACTORS.find(x=>x.id===u.factorId);
+          const row = [
+            (f?.name||'').replaceAll(',',' '),
+            UTIL.typeLabel(f?.type||'').replaceAll(',',' '),
+            f?.value !== undefined ? f.value : '',
+            (f?.unit||'').replaceAll(',',' '),
+            UTIL.objLabel(u.obj).replaceAll(',',' '),
+            UTIL.stageLabel(u.stage).replaceAll(',',' '),
+            (u.process||'').replaceAll(',',' '),
+            (u.note||'').replaceAll(',',' ')
+          ];
+          return row.join(',');
+        });
+
+        const csv = [header].concat(lines).join('\n');
+        UTIL.downloadText(`${pkg.name || pkg.id}_factor_package.csv`, csv);
+      }
+    };
+
+    /******************************************************************
+     * [PKG-00] 因子包业务逻辑
+     ******************************************************************/
+    const PKG = {
+
+      /* [PKG-10] 创建因子包 */
+      async createPackage(){
+        const name = (document.getElementById('pkgNameInput').value || '').trim();
+        if(!name) return alert('请填写因子包名称。');
+
+        const pkg = {
+          id: UTIL.uid('PKG_'),
+          name,
+          createdAt: new Date().toISOString().slice(0,19).replace('T',' ')
+        };
+
+        PACKAGES.push(pkg);
+        STORAGE.savePackages();
+
+        STATE.activePackageId = pkg.id;
+
+        bootstrap.Modal.getInstance(document.getElementById('createPackageModal')).hide();
+
+        UI.renderPackageList();
+        UI.renderActivePackagePanel();
+        UI.updateBadges();
+      },
+
+      /* [PKG-11] 从弹窗创建"使用项" */
+      async createUsageFromModal(){
+        const factorId = STATE.pendingFactorId;
+        const pkgId = document.getElementById('addModalPkgSelect').value;
+
+        if(!pkgId) return alert('暂无因子包，请先创建因子包。');
+        if(!factorId) return alert('未选择因子。');
+
+        const usage = {
+          id: UTIL.uid('U_'),
+          packageId: pkgId,
+          factorId: factorId,
+          obj: document.getElementById('usageObj').value,
+          stage: document.getElementById('usageStage').value,
+          process: (document.getElementById('usageProcess').value || '').trim(),
+          note: (document.getElementById('usageNote').value || '').trim(),
+          createdAt: new Date().toISOString()
+        };
+
+        USAGES.push(usage);
+        STORAGE.saveUsages();
+
+        STATE.activePackageId = pkgId;
+
+        bootstrap.Modal.getInstance(document.getElementById('addToPackageModal')).hide();
+
+        UI.renderPackageList();
+        UI.renderActivePackagePanel();
+        UI.updateBadges();
+      },
+
+      /* [PKG-12] 删除使用项 */
+      async deleteUsage(usageId){
+        const u = USAGES.find(x=>x.id===usageId);
+        if(!u) return;
+
+        const ok = confirm('确认删除该使用项？（不会影响因子本体）');
+        if(!ok) return;
+
+        USAGES = USAGES.filter(x=>x.id!==usageId);
+        STORAGE.saveUsages();
+
+        UI.renderPackageList();
+        UI.renderActivePackagePanel();
+        UI.updateBadges();
+      },
+
+      /* [PKG-13] 保存使用项编辑 */
+      async saveUsageEdits(){
+        const id = STATE.editingUsageId;
+        const u = USAGES.find(x=>x.id===id);
+        if(!u) return;
+
+        u.obj = document.getElementById('editObj').value;
+        u.stage = document.getElementById('editStage').value;
+        u.process = (document.getElementById('editProcess').value || '').trim();
+        u.note = (document.getElementById('editNote').value || '').trim();
+
+        STORAGE.saveUsages();
+
+        bootstrap.Modal.getInstance(document.getElementById('editUsageModal')).hide();
+        UI.renderActivePackagePanel();
+        UI.renderPackageList();
+      }
+    };
+
+    /******************************************************************
+     * [APP-00] 初始化入口
+     ******************************************************************/
+    async function initApp(){
+      // 1. 加载数据（从 JSON + localStorage）
+      await STORAGE.loadAll();
+
+      // 2. 初始化 UI
+      UI.renderFactorTypeButtons();
+      UI.applyAllLibraryFilters();
+      UI.renderPackageList();
+      UI.renderActivePackagePanel();
+      UI.updateBadges();
+
+      // 初始化工具提示
+      UI.initTooltips();
+
+      // 切换到数据库视图
+      UI.switchMainView('database', null);
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
