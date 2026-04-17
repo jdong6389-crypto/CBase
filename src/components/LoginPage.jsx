@@ -27,7 +27,7 @@ export default function LoginPage({ onLogin }) {
       <div className="login-card">
         <div className="text-center mb-4">
           <div style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-1px' }}>CBase</div>
-          <div className="muted">基础设施碳排放因子数据库</div>
+          <div className="muted">基础设施碳排放因子数据库 v2.1</div>
         </div>
 
         <form onSubmit={handleSubmit}>
