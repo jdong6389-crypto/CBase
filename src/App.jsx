@@ -42,7 +42,7 @@ export default function App() {
   const [factors, setFactors] = useState([])
   const [packages, setPackages] = useState([])
   const [currentView, setCurrentView] = useState('database')
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   // Modal states
   const [detailFactor, setDetailFactor] = useState(null)
