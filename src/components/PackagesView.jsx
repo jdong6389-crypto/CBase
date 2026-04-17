@@ -11,7 +11,7 @@ export default function PackagesView({
   const loadUsages = useCallback(() => {
     if (!activePackageId) { setUsages([]); return }
     api.getUsages(activePackageId).then(setUsages).catch(console.error)
-  }, [activePackageId])
+  }, [activePackageId, packages])
 
   useEffect(() => { loadUsages() }, [loadUsages])
 
