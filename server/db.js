@@ -53,6 +53,7 @@ db.run(`
     value REAL,
     unit TEXT,
     source TEXT,
+    source_citation TEXT,
     version TEXT,
     year TEXT,
     spatial_scope TEXT,
@@ -93,7 +94,7 @@ db.run(`
     submitted_by INTEGER NOT NULL,
     status TEXT DEFAULT 'pending',
     reject_reason TEXT,
-    name TEXT, type TEXT, value REAL, unit TEXT, source TEXT, version TEXT, year TEXT,
+    name TEXT, type TEXT, value REAL, unit TEXT, source TEXT, source_citation TEXT, version TEXT, year TEXT,
     spatial_scope TEXT, spatial_note TEXT, boundary_note TEXT,
     application_examples TEXT, caution_examples TEXT, usage_notes TEXT,
     created_at TEXT DEFAULT (datetime('now','localtime')),
@@ -101,6 +102,10 @@ db.run(`
     reviewed_by INTEGER
   )
 `)
+
+// Migration: add source_citation column to existing tables
+try { db.run('ALTER TABLE factors ADD COLUMN source_citation TEXT') } catch(e) {}
+try { db.run('ALTER TABLE factor_edits ADD COLUMN source_citation TEXT') } catch(e) {}
 
 // Helper: run query and return rows as objects
 export function all(sql, params = []) {
@@ -140,10 +145,10 @@ if (count && count.c === 0) {
     const seedData = JSON.parse(fs.readFileSync(seedPath, 'utf-8'))
     for (const f of seedData) {
       db.run(
-        `INSERT INTO factors (id, type, name, value, unit, source, version, year,
+        `INSERT INTO factors (id, type, name, value, unit, source, source_citation, version, year,
           spatial_scope, spatial_note, boundary_note, application_examples, caution_examples, usage_notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [f.id, f.type, f.name, f.value, f.unit, f.source, f.version, f.year,
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [f.id, f.type, f.name, f.value, f.unit, f.source, f.source_citation || '', f.version, f.year,
           f.spatial_scope, f.spatial_note, f.boundary_note,
           JSON.stringify(f.application_examples || []),
           JSON.stringify(f.caution_examples || []),

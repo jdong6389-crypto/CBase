@@ -1,14 +1,15 @@
 # CBase - 开发日志
 
 ## 当前状态（每次更新覆盖）
-- **当前版本**: V2.1（已部署上线）
+- **当前版本**: V2.2（待部署）
 - **核心定位**: 基础设施碳排放因子共享数据库，支持多课题组协作录入与查询
-- **已完成**: 全功能上线 — 因子 CRUD 前端表单、权限审核流、注册管控、阿里云 ECS 部署
+- **已完成**: V2.2 全站 UI 统一改版 — 因子详情页重构、全组件去 Bootstrap 化、暖色 Notion 风格设计语言统一
 - **线上地址**: http://8.141.82.4:3001
 - **服务器**: 阿里云 ECS（华北2），CentOS 7.9，4核8G，Node 16.20.2
 - **账号**: admin/admin123（管理员）、dalianligong/123456（测试编辑）
 - **进行中**: 无
 - **待定/开放问题**:
+  - 因子命名规范需确立 — 当前示例因子命名混乱（括号内容无统一逻辑），需检索行业标准因子库采集示例后制定规范，并在上传表单中给出引导
   - 核算方法模块的具体需求还需细化
   - 是否需要域名 + HTTPS
   - 服务器重启后需手动启动 node 进程（可考虑 systemd 服务）
@@ -93,3 +94,36 @@
 - 重启命令：`kill $(pgrep -f "node server/index.js") && cd /home/CBase && nohup env NODE_ENV=production node server/index.js > cbase.log 2>&1 &`
 - 更新流程：本地 `npm run build` → git push → 服务器 `git pull` → 重启
 - 日志文件：/home/CBase/cbase.log
+
+### V2.2 - 2026-04-21（全站 UI 统一改版 + 来源类型）
+**设计决策**:
+- 因子详情页完全重构，从"字段罗列"改为"决策导向"布局
+- 参考 IPCC EFDB 的 Properties 五元组、ecoinvent 的渐进展开、Notion 的温暖极简设计语言
+- 工艺代表性展示方式：`parseBoundary()` 将 boundary_note 自动解析为"包含/不包含"结构化列表，取代截断+展开
+- 身份信息从散落的 pill 标签改为 3x2 网格表格（ID/类型/版本/来源/录入者/引用次数），线条分隔
+- 适用性评估区三个代表性维度并列：时间 + 空间（2列）、工艺/技术（全宽）
+- 来源字段从纯文本改为类型选择 + 文献引用支持
+- 全站去 Bootstrap 化：所有组件统一使用自定义 CSS 命名空间（fd-*/lib-*/pk-*/atpk-*/rv-*/sb-*）
+- 暖色设计语言统一：`--primary: #1e293b`、`--bg: #f5f4f0`、`--border: #d8d5d0`，消除蓝/绿 Bootstrap 色调割裂
+- 表单弹窗与详情页字段名/结构完全对齐（适用性评估分区、BoundaryList 结构化编辑等）
+- 编辑使用项/新建因子包/审核面板等小弹窗也同步为 fd-* 统一风格
+
+**开放问题（记录待后续解决）**:
+- 因子命名规范：当前 8 条示例因子的括号内容含义不一（气体/地区/规格/方法学），需采集行业标准因子库示例后确立统一规范，并在上传表单 placeholder 中引导用户
+
+**任务进度**:
+- [x] 因子详情页布局重构 + Notion 风格 UI
+- [x] boundary_note 结构化解析（包含/不包含）
+- [x] 6宫格信息网格、分割线、图标居中对齐
+- [x] 来源类型选项 + 文献引用字段（source_citation DB 迁移）
+- [x] FactorFormModal 表单弹窗 UI 同步（BoundaryList / DynamicList 组件）
+- [x] LibraryView 因子库页面 UI 改版（lib-* 命名空间）
+- [x] PackagesView 因子包页面 UI 改版（pk-* 命名空间）
+- [x] AddToPackageModal 添加到因子包弹窗改版（fd-* + atpk-*）
+- [x] EditUsageModal 编辑使用项弹窗改版（fd-*）
+- [x] CreatePackageModal 新建因子包弹窗改版（fd-*）
+- [x] DatabaseView 数据库搜索结果改版（lib-table）
+- [x] ReviewPanel 审核面板改版（lib-table + rv-*）
+- [x] CSS 全局变量统一（暖色系 --primary/--bg/--border）
+- [x] 侧边栏 box-shadow + 弹窗阴影增强
+- [ ] 因子命名规范确立（待后续调研）

@@ -21,28 +21,38 @@ export default function CreatePackageModal({ onClose, onCreated }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={e => e.stopPropagation()}>
-        <div className="p-3 border-bottom d-flex justify-content-between align-items-center">
-          <h5 className="fw-bold mb-0">
-            <i className="fa-solid fa-box-open text-primary me-2"></i>新建因子包
-          </h5>
-          <button className="btn-close" onClick={onClose}></button>
+        <div className="fd-header">
+          <span className="fd-header-title">
+            <i className="fa-solid fa-box-open" style={{ marginRight: 6 }}></i>
+            新建因子包
+          </span>
+          <button className="fd-close" onClick={onClose}><i className="fa-solid fa-xmark"></i></button>
         </div>
-        <div className="p-3">
-          <label className="form-label small fw-bold">因子包名称</label>
+
+        <div className="fd-body">
+          <label className="fd-form-label">因子包名称</label>
           <input
-            className="form-control"
+            className="fd-input"
+            style={{ width: '100%' }}
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="例如：公路工程-施工阶段核算包"
             onKeyPress={e => e.key === 'Enter' && handleSubmit()}
           />
-          <div className="small muted mt-2">提示：因子包用于"把因子放到你的工程过程里"，后续可导出给计算模块。</div>
+          <div style={{ fontSize: '0.75rem', color: '#a39e98', marginTop: 8, lineHeight: 1.5 }}>
+            提示：因子包用于"把因子放到你的工程过程里"，后续可导出给计算模块。
+          </div>
         </div>
-        <div className="p-3 border-top d-flex justify-content-end gap-2">
-          <button className="btn btn-outline-secondary" onClick={onClose}>取消</button>
-          <button className="btn btn-success" onClick={handleSubmit} disabled={loading}>
-            {loading ? '创建中...' : '创建'}
-          </button>
+
+        <div className="fd-footer">
+          <span></span>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="fd-btn-close" onClick={onClose}>取消</button>
+            <button className="fd-btn-save" onClick={handleSubmit} disabled={loading}>
+              <i className="fa-solid fa-plus" style={{ marginRight: 6 }}></i>
+              {loading ? '创建中...' : '创建'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

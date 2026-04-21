@@ -67,133 +67,129 @@ export default function PackagesView({
   }
 
   return (
-    <div className="pkg-wrap">
+    <div className="pk-wrap">
       {/* Left: package list */}
-      <div className="pkg-left">
-        <div className="cardx p-3 mb-2">
-          <div className="d-flex justify-content-between align-items-center">
-            <div className="fw-bold"><i className="fa-solid fa-box-open me-2 text-primary"></i>因子包列表</div>
-            <button className="btn btn-sm btn-success" type="button" onClick={onCreatePackage}>
-              <i className="fa-solid fa-plus"></i>
-            </button>
+      <div className="pk-left">
+        <div className="pk-panel pk-panel-head">
+          <div className="pk-panel-title">
+            <i className="fa-solid fa-box-open"></i>
+            <span>因子包列表</span>
           </div>
-          <div className="mt-2 small muted">因子包用于"把因子放进你的工程过程里"，用于后续计算与追溯。</div>
+          <button className="pk-btn-add" onClick={onCreatePackage} title="新建因子包">
+            <i className="fa-solid fa-plus"></i>
+          </button>
         </div>
+        <div className="pk-hint">把因子放进工程过程里，用于后续计算与追溯。</div>
 
-        <div className="cardx p-2">
-          <div className="list-group">
-            {packages.length === 0 && (
-              <div className="p-3 small muted">暂无因子包。点击上方"+"新建。</div>
-            )}
-            {packages.map(pkg => (
-              <div
-                key={pkg.id}
-                className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center${pkg.id === activePackageId ? ' active' : ''}`}
-                onClick={() => onSelectPackage(pkg.id)}
-              >
-                <div>
-                  <div className="fw-bold">{pkg.name}</div>
-                  <div className="small muted">使用项 {pkg.usage_count ?? 0} 条</div>
-                </div>
-                <span className="badge bg-light text-dark mono">{pkg.id}</span>
+        <div className="pk-list">
+          {packages.length === 0 && (
+            <div className="pk-list-empty">暂无因子包，点击上方 + 新建。</div>
+          )}
+          {packages.map(pkg => (
+            <div
+              key={pkg.id}
+              className={`pk-item${pkg.id === activePackageId ? ' pk-item-active' : ''}`}
+              onClick={() => onSelectPackage(pkg.id)}
+            >
+              <div>
+                <div className="pk-item-name">{pkg.name}</div>
+                <div className="pk-item-sub">使用项 {pkg.usage_count ?? 0} 条</div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* Right: active package detail */}
-      <div className="pkg-right">
-        <div className="cardx p-3 mb-2">
-          <div className="d-flex justify-content-between align-items-center">
-            <div>
-              <div className="fw-bold">
-                <i className="fa-solid fa-circle-info me-2 text-primary"></i>
-                {activePkg ? activePkg.name : '请选择一个因子包'}
-              </div>
-              <div className="small muted">
-                {activePkg ? `包ID：${activePkg.id} | 创建时间：${activePkg.created_at || '-'}` : '-'}
-              </div>
+      <div className="pk-right">
+        {/* Package header */}
+        <div className="pk-detail-head">
+          <div className="pk-detail-info">
+            <div className="pk-detail-name">
+              {activePkg ? activePkg.name : '请选择一个因子包'}
             </div>
             {activePkg && (
-              <div className="d-flex gap-2">
-                <button className="btn btn-primary btn-sm" onClick={() => onAddToPackage({ _selectFromAll: true })}>
-                  <i className="fa-solid fa-plus me-1"></i> 添加因子
-                </button>
-                <button className="btn btn-outline-secondary btn-sm" onClick={handleRename}>
-                  <i className="fa-solid fa-pen me-1"></i> 重命名
-                </button>
-                <button className="btn btn-outline-danger btn-sm" onClick={handleDelete}>
-                  <i className="fa-solid fa-trash me-1"></i> 删除包
-                </button>
+              <div className="pk-detail-meta">
+                {activePkg.id} · {activePkg.created_at ? activePkg.created_at.slice(0, 10) : '-'}
               </div>
             )}
           </div>
+          {activePkg && (
+            <div className="pk-detail-actions">
+              <button className="pk-btn pk-btn-primary" onClick={() => onAddToPackage({ _selectFromAll: true })}>
+                <i className="fa-solid fa-plus"></i> 添加因子
+              </button>
+              <button className="pk-btn" onClick={handleRename}>
+                <i className="fa-solid fa-pen"></i> 重命名
+              </button>
+              <button className="pk-btn pk-btn-danger" onClick={handleDelete}>
+                <i className="fa-solid fa-trash-can"></i> 删除
+              </button>
+            </div>
+          )}
         </div>
 
-        <div className="cardx">
-          <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0">
-              <thead>
-                <tr>
-                  <th style={{ width: '10%' }}>使用项ID</th>
-                  <th style={{ width: '22%' }}>因子</th>
-                  <th style={{ width: '12%' }}>对象</th>
-                  <th style={{ width: '14%' }}>阶段</th>
-                  <th style={{ width: '22%' }}>过程/工序</th>
-                  <th style={{ width: '10%' }}>备注</th>
-                  <th style={{ width: '10%' }}>操作</th>
+        {/* Usages table */}
+        <div className="lib-table-wrap">
+          <table className="lib-table">
+            <thead>
+              <tr>
+                <th className="lib-th" style={{ width: '28%' }}>因子</th>
+                <th className="lib-th" style={{ width: '14%' }}>对象</th>
+                <th className="lib-th" style={{ width: '14%' }}>阶段</th>
+                <th className="lib-th" style={{ width: '20%' }}>过程 / 工序</th>
+                <th className="lib-th" style={{ width: '10%' }}>备注</th>
+                <th className="lib-th" style={{ width: '14%', textAlign: 'right' }}>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {!activePkg && (
+                <tr><td colSpan="6" className="lib-td lib-empty">未选择因子包</td></tr>
+              )}
+              {activePkg && usages.length === 0 && (
+                <tr><td colSpan="6" className="lib-td lib-empty">暂无使用项，请添加因子。</td></tr>
+              )}
+              {usages.map(u => (
+                <tr key={u.id} className="lib-row">
+                  <td className="lib-td">
+                    <div className="pk-factor-name">{u.factor_name || u.factor_id}</div>
+                    <div className="pk-factor-meta">{typeLabel(u.factor_type || '')} · {u.factor_unit || '-'}</div>
+                  </td>
+                  <td className="lib-td">{objLabel(u.obj)}</td>
+                  <td className="lib-td">{stageLabel(u.stage)}</td>
+                  <td className="lib-td">{u.process || '-'}</td>
+                  <td className="lib-td lib-td-muted">{u.note || '-'}</td>
+                  <td className="lib-td lib-td-actions">
+                    <button className="lib-action" title="查看详情"
+                      onClick={() => {
+                        const f = factors.find(x => x.id === u.factor_id)
+                        if (f) onViewDetail(f)
+                      }}>
+                      <i className="fa-solid fa-eye"></i>
+                    </button>
+                    <button className="lib-action" title="编辑"
+                      onClick={() => onEditUsage({ ...u, packageId: activePackageId })}>
+                      <i className="fa-solid fa-pen"></i>
+                    </button>
+                    <button className="lib-action pk-action-del" title="删除"
+                      onClick={() => handleDeleteUsage(u.id)}>
+                      <i className="fa-solid fa-trash-can"></i>
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {!activePkg && (
-                  <tr><td colSpan="7" className="text-center muted py-4">未选择因子包</td></tr>
-                )}
-                {activePkg && usages.length === 0 && (
-                  <tr><td colSpan="7" className="text-center muted py-4">该因子包暂无使用项。请到因子库点击"+"添加。</td></tr>
-                )}
-                {usages.map(u => (
-                  <tr key={u.id}>
-                    <td className="mono text-muted">{u.id}</td>
-                    <td>
-                      <div className="fw-bold">{u.factor_name || u.factor_id}</div>
-                      <div className="small muted">{typeLabel(u.factor_type || '')} | {u.factor_unit || ''}</div>
-                    </td>
-                    <td>{objLabel(u.obj)}</td>
-                    <td>{stageLabel(u.stage)}</td>
-                    <td>{u.process || '-'}</td>
-                    <td className="muted">{u.note || ''}</td>
-                    <td>
-                      <div className="btn-group">
-                        <button className="btn btn-sm btn-outline-primary" title="查看详情"
-                          onClick={() => {
-                            const f = factors.find(x => x.id === u.factor_id)
-                            if (f) onViewDetail(f)
-                          }}>
-                          <i className="fa-solid fa-eye"></i>
-                        </button>
-                        <button className="btn btn-sm btn-outline-primary" title="编辑"
-                          onClick={() => onEditUsage({ ...u, packageId: activePackageId })}>
-                          <i className="fa-solid fa-pen"></i>
-                        </button>
-                        <button className="btn btn-sm btn-outline-danger" title="删除"
-                          onClick={() => handleDeleteUsage(u.id)}>
-                          <i className="fa-solid fa-trash"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        <div className="d-flex justify-content-between align-items-center mt-3">
-          <div className="small muted">当前包使用项：{usages.length} 条</div>
+        {/* Footer */}
+        <div className="pk-footer">
+          <span className="pk-footer-count">
+            {activePkg ? `${usages.length} 条使用项` : ''}
+          </span>
           {activePkg && usages.length > 0 && (
-            <button className="btn btn-outline-primary btn-sm" onClick={handleExportCSV}>
-              <i className="fa-solid fa-file-csv me-1"></i> 导出 CSV
+            <button className="pk-btn" onClick={handleExportCSV}>
+              <i className="fa-solid fa-download"></i> 导出 CSV
             </button>
           )}
         </div>

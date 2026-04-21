@@ -71,10 +71,10 @@ router.post('/', requireAuth, (req, res) => {
   const f = req.body
   const id = f.id || uid('F')
   run(
-    `INSERT INTO factors (id, type, name, value, unit, source, version, year,
+    `INSERT INTO factors (id, type, name, value, unit, source, source_citation, version, year,
       spatial_scope, spatial_note, boundary_note, application_examples, caution_examples, usage_notes, created_by)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, f.type, f.name, f.value ?? null, f.unit || '', f.source || '', f.version || '', f.year || '',
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, f.type, f.name, f.value ?? null, f.unit || '', f.source || '', f.source_citation || '', f.version || '', f.year || '',
       f.spatial_scope || '', f.spatial_note || '', f.boundary_note || '',
       JSON.stringify(f.application_examples || []),
       JSON.stringify(f.caution_examples || []),
@@ -99,12 +99,13 @@ router.put('/:id', requireAuth, (req, res) => {
   if (req.user.role === 'admin') {
     // Admin: direct update
     run(
-      `UPDATE factors SET type=?, name=?, value=?, unit=?, source=?, version=?, year=?,
+      `UPDATE factors SET type=?, name=?, value=?, unit=?, source=?, source_citation=?, version=?, year=?,
         spatial_scope=?, spatial_note=?, boundary_note=?, application_examples=?, caution_examples=?,
         usage_notes=?, updated_at=datetime('now','localtime')
       WHERE id=?`,
       [f.type ?? existing.type, f.name ?? existing.name, f.value ?? existing.value,
-        f.unit ?? existing.unit, f.source ?? existing.source, f.version ?? existing.version,
+        f.unit ?? existing.unit, f.source ?? existing.source, f.source_citation ?? existing.source_citation ?? '',
+        f.version ?? existing.version,
         f.year ?? existing.year, f.spatial_scope ?? existing.spatial_scope,
         f.spatial_note ?? existing.spatial_note, f.boundary_note ?? existing.boundary_note,
         JSON.stringify(f.application_examples || parseJSON(existing.application_examples)),
@@ -120,12 +121,13 @@ router.put('/:id', requireAuth, (req, res) => {
   } else {
     // Editor: create a pending edit record
     run(
-      `INSERT INTO factor_edits (factor_id, submitted_by, name, type, value, unit, source, version, year,
+      `INSERT INTO factor_edits (factor_id, submitted_by, name, type, value, unit, source, source_citation, version, year,
         spatial_scope, spatial_note, boundary_note, application_examples, caution_examples, usage_notes)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [req.params.id, req.user.id,
         f.name ?? existing.name, f.type ?? existing.type, f.value ?? existing.value,
-        f.unit ?? existing.unit, f.source ?? existing.source, f.version ?? existing.version,
+        f.unit ?? existing.unit, f.source ?? existing.source, f.source_citation ?? existing.source_citation ?? '',
+        f.version ?? existing.version,
         f.year ?? existing.year, f.spatial_scope ?? existing.spatial_scope,
         f.spatial_note ?? existing.spatial_note, f.boundary_note ?? existing.boundary_note,
         JSON.stringify(f.application_examples || parseJSON(existing.application_examples)),

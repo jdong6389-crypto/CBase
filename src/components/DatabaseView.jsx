@@ -38,7 +38,7 @@ export default function DatabaseView({ factors, onViewDetail, onAddToPackage, si
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             <input
               type="text"
-              className="database-search-input form-control"
+              className="database-search-input"
               style={{ flex: 1 }}
               placeholder="搜索因子：名称 / 关键词 / 来源 / 单位..."
               value={query}
@@ -46,47 +46,45 @@ export default function DatabaseView({ factors, onViewDetail, onAddToPackage, si
               onKeyPress={handleKeyPress}
             />
             <button className="database-search-btn" type="button" onClick={handleSearch}>
-              <i className="fa-solid fa-magnifying-glass me-2"></i>搜索
+              <i className="fa-solid fa-magnifying-glass" style={{ marginRight: 8 }}></i>搜索
             </button>
           </div>
 
           {results !== null && (
-            <div className="cardx" style={{ width: '100%' }}>
-              <div className="table-responsive" style={{ maxHeight: 400, overflowY: 'auto' }}>
-                <table className="table table-hover align-middle mb-0">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '70%' }}>名称</th>
-                      <th style={{ width: '20%' }}>来源</th>
-                      <th style={{ width: '10%' }}>操作</th>
+            <div className="lib-table-wrap" style={{ maxHeight: 420, overflowY: 'auto' }}>
+              <table className="lib-table">
+                <thead>
+                  <tr>
+                    <th className="lib-th" style={{ width: '70%' }}>名称</th>
+                    <th className="lib-th" style={{ width: '20%' }}>来源</th>
+                    <th className="lib-th" style={{ width: '10%', textAlign: 'right' }}>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.map(f => (
+                    <tr key={f.id} className="lib-row">
+                      <td className="lib-td lib-td-name" onClick={() => onViewDetail(f)}>{f.name}</td>
+                      <td className="lib-td lib-td-muted">{f.source || '-'}</td>
+                      <td className="lib-td lib-td-actions">
+                        <button className="lib-action" title="查看详情" onClick={() => onViewDetail(f)}>
+                          <i className="fa-solid fa-eye"></i>
+                        </button>
+                        <button className="lib-action lib-action-primary" title="添加到因子包" onClick={() => onAddToPackage(f)}>
+                          <i className="fa-solid fa-plus"></i>
+                        </button>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {results.map(f => (
-                      <tr key={f.id}>
-                        <td className="fw-bold">{f.name}</td>
-                        <td className="muted">{f.source || '-'}</td>
-                        <td>
-                          <div className="btn-group">
-                            <button className="btn btn-sm btn-outline-primary" title="查看详情" onClick={() => onViewDetail(f)}>
-                              <i className="fa-solid fa-eye"></i>
-                            </button>
-                            <button className="btn btn-sm btn-primary" title="添加到因子包" onClick={() => onAddToPackage(f)}>
-                              <i className="fa-solid fa-square-plus"></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {results.length === 0 && (
-                      <tr><td colSpan="3" className="text-center muted py-4">未找到匹配的因子</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              <div className="text-center mt-3 small muted pb-3">
-                共找到 {results.length} 条结果
-              </div>
+                  ))}
+                  {results.length === 0 && (
+                    <tr><td colSpan="3" className="lib-td lib-empty">未找到匹配的因子</td></tr>
+                  )}
+                </tbody>
+              </table>
+              {results.length > 0 && (
+                <div style={{ textAlign: 'center', padding: '10px 0', fontSize: '0.78rem', color: '#c4c2bb' }}>
+                  共找到 {results.length} 条结果
+                </div>
+              )}
             </div>
           )}
         </div>

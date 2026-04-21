@@ -56,16 +56,13 @@ export default function Sidebar({ collapsed, onToggle, currentView, onSwitch, us
             </div>
           ))}
 
-          <div style={{ marginTop: 'auto', padding: '16px 18px', borderTop: '1px solid #e5e7eb' }}>
-            <div className="fw-bold">{user.displayName}</div>
-            <div className="muted" style={{ fontSize: '0.78rem' }}>
+          <div className="sb-user">
+            <div className="sb-user-name">{user.displayName}</div>
+            <div className="sb-user-group">
               {user.groupName || '未设置课题组'}
-              {user.role === 'admin' && <span className="badge bg-danger ms-1" style={{ fontSize: '0.65rem' }}>管理员</span>}
+              {user.role === 'admin' && <span className="sb-badge-admin">管理员</span>}
             </div>
-            <button
-              className="btn btn-outline-secondary btn-sm mt-2 w-100"
-              onClick={onLogout}
-            >
+            <button className="sb-logout" onClick={onLogout}>
               退出登录
             </button>
           </div>
